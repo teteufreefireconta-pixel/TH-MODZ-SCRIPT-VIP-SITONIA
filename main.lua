@@ -1,6 +1,6 @@
 -- =================================================================
--- TH MODZ SCRIPT V1 - V110 (ULTIMATE EDITION)
--- STATUS: TUDO VOLTOU | ESP DISTANCE | AIMBOT | RADARES | F1 & X
+-- TH MODZ SCRIPT V1 - V110 (ULTIMATE EDITION - FIXED)
+-- STATUS: OTIMIZADO | ANTI-LAG | SEM CONGELAMENTO
 -- =================================================================
 
 local Player = game:GetService("Players").LocalPlayer
@@ -8,6 +8,10 @@ local Camera = workspace.CurrentCamera
 local RS = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local TS = game:GetService("TweenService")
+
+-- Limpeza de Scripts Antigos (Evita acumular e congelar)
+if _G.TH_Connection then _G.TH_Connection:Disconnect() end
+if game.CoreGui:FindFirstChild("TH_V1") then game.CoreGui.TH_V1:Destroy() end
 
 local Settings = {
     Aimbot = false, 
@@ -41,52 +45,66 @@ local function Drag(obj)
     obj.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then d = false end end)
 end
 
--- 3. ESP DISTÂNCIA (FIXED)
+-- 3. ESP DISTÂNCIA (OTIMIZADO)
 local function CreateESP(Target)
     local Text = Drawing.new("Text")
     Text.Visible = false; Text.Center = true; Text.Outline = true; Text.Font = 2; Text.Size = 13; Text.Color = Color3.fromRGB(255, 255, 255)
-    RS.RenderStepped:Connect(function()
-        if Settings.ESP and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") and Target ~= Player then
+    
+    local Connection
+    Connection = RS.RenderStepped:Connect(function()
+        if Settings.ESP and Target and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") and Target ~= Player then
             local Root = Target.Character.HumanoidRootPart
             local Pos, OnScreen = Camera:WorldToViewportPoint(Root.Position)
             if OnScreen then
-                local Dist = math.floor((Player.Character.HumanoidRootPart.Position - Root.Position).Magnitude)
-                Text.Position = Vector2.new(Pos.X, Pos.Y); Text.Text = Target.Name .. " [" .. Dist .. "m]"; Text.Visible = true
+                local MyRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+                if MyRoot then
+                    local Dist = math.floor((MyRoot.Position - Root.Position).Magnitude)
+                    Text.Position = Vector2.new(Pos.X, Pos.Y); Text.Text = Target.Name .. " [" .. Dist .. "m]"; Text.Visible = true
+                end
             else Text.Visible = false end
-        else Text.Visible = false end
-        if not (Target and Target.Parent) then Text:Remove() end
+        else 
+            Text.Visible = false 
+        end
+        if not (Target and Target.Parent) then 
+            Text:Remove() 
+            Connection:Disconnect()
+        end
     end)
 end
+
 for _, v in pairs(game.Players:GetPlayers()) do CreateESP(v) end
 game.Players.PlayerAdded:Connect(CreateESP)
 
--- 4. LOGIN COM TEXTBOX E ANIMAÇÃO
+-- 4. LOGIN (CORRIGIDO PARA NÃO CONGELAR)
 local function CreateLogin()
-    local LoginGui = Instance.new("ScreenGui", Player.PlayerGui); LoginGui.ResetOnSpawn = false
+    local LoginGui = Instance.new("ScreenGui", game.CoreGui); LoginGui.Name = "TH_Login"; LoginGui.ResetOnSpawn = false
     local Main = Instance.new("Frame", LoginGui); Main.Size = UDim2.new(0, 320, 0, 320); Main.Position = UDim2.new(0.5, -160, 0.4, -160)
     Main.BackgroundColor3 = Color3.fromRGB(10, 10, 15); Instance.new("UICorner", Main); Instance.new("UIStroke", Main).Color = Color3.fromRGB(255, 0, 150)
-    local Title = Instance.new("TextLabel", Main); Title.Size = UDim2.new(1, 0, 0, 80); Title.Text = "TH SYSTEM"; Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.Font = Enum.Font.GothamBold; Title.TextSize = 24; Title.BackgroundTransparency = 1
     
-    local KeyBox = Instance.new("TextBox", Main); KeyBox.Size = UDim2.new(0.8, 0, 0, 45); KeyBox.Position = UDim2.new(0.1, 0, 0.4, 0); KeyBox.PlaceholderText = "INSIRA SUA KEY..."; KeyBox.BackgroundColor3 = Color3.fromRGB(20, 20, 25); KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255); Instance.new("UICorner", KeyBox)
-    local LogBtn = Instance.new("TextButton", Main); LogBtn.Size = UDim2.new(0.8, 0, 0, 45); LogBtn.Position = UDim2.new(0.1, 0, 0.65, 0); LogBtn.Text = "VERIFICAR"; LogBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 150); LogBtn.TextColor3 = Color3.fromRGB(255, 255, 255); LogBtn.Font = Enum.Font.GothamBold; Instance.new("UICorner", LogBtn)
+    local Title = Instance.new("TextLabel", Main); Title.Size = UDim2.new(1, 0, 0, 80); Title.Text = "TH SYSTEM"; Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.Font = Enum.Font.GothamBold; Title.TextSize = 24; Title.BackgroundTransparency = 1
+    local LogBtn = Instance.new("TextButton", Main); LogBtn.Size = UDim2.new(0.8, 0, 0, 45); LogBtn.Position = UDim2.new(0.1, 0, 0.65, 0); LogBtn.Text = "ENTRAR NO SISTEMA"; LogBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 150); LogBtn.TextColor3 = Color3.fromRGB(255, 255, 255); LogBtn.Font = Enum.Font.GothamBold; Instance.new("UICorner", LogBtn)
 
     LogBtn.MouseButton1Click:Connect(function()
-        LogBtn.Visible = false; KeyBox.Visible = false
+        LogBtn.Visible = false
         local BarBg = Instance.new("Frame", Main); BarBg.Size = UDim2.new(0.8, 0, 0, 10); BarBg.Position = UDim2.new(0.1, 0, 0.6, 0); BarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 35); Instance.new("UICorner", BarBg)
         local Fill = Instance.new("Frame", BarBg); Fill.Size = UDim2.new(0, 0, 1, 0); Fill.BackgroundColor3 = Color3.fromRGB(255, 0, 150); Instance.new("UICorner", Fill)
-        local Msgs = {"VERIFICANDO NA FIREBASE", "USUARIO CONFIRMADO", "SINCRONIZANDO...", "BEM VINDO, " .. Player.Name:upper()}
-        for i, msg in ipairs(Msgs) do
-            Title.Text = msg
-            local Tw = TS:Create(Fill, TweenInfo.new(2, Enum.EasingStyle.Linear), {Size = UDim2.new(i/#Msgs, 0, 1, 0)})
-            Tw:Play(); Tw.Completed:Wait()
-        end
-        LoginGui:Destroy(); LoadV1Menu()
+        
+        task.spawn(function()
+            local Msgs = {"VERIFICANDO...", "USUARIO OK", "BEM VINDO!"}
+            for i, msg in ipairs(Msgs) do
+                Title.Text = msg
+                local Tw = TS:Create(Fill, TweenInfo.new(0.8), {Size = UDim2.new(i/#Msgs, 0, 1, 0)})
+                Tw:Play(); Tw.Completed:Wait()
+                task.wait(0.2)
+            end
+            LoginGui:Destroy(); LoadV1Menu()
+        end)
     end)
 end
 
--- 5. MENU PRINCIPAL (COM TUDO)
+-- 5. MENU PRINCIPAL (OTIMIZADO)
 function LoadV1Menu()
-    local HUD = Instance.new("ScreenGui", Player.PlayerGui); HUD.Name = "TH_V1"; HUD.ResetOnSpawn = false
+    local HUD = Instance.new("ScreenGui", game.CoreGui); HUD.Name = "TH_V1"; HUD.ResetOnSpawn = false
 
     local function CreateRadar(name, color, pos)
         local R = Instance.new("Frame", HUD); R.Size = UDim2.new(0, 180, 0, 100); R.Position = pos; R.BackgroundColor3 = Color3.fromRGB(12, 12, 15); R.Visible = false; Instance.new("UICorner", R); Instance.new("UIStroke", R).Color = color; Drag(R)
@@ -103,7 +121,7 @@ function LoadV1Menu()
     local MTitle = Instance.new("TextLabel", Top); MTitle.Size = UDim2.new(1, -40, 1, 0); MTitle.Position = UDim2.new(0, 10, 0, 0); MTitle.Text = "TH MODZ V1"; MTitle.TextColor3 = Color3.fromRGB(255, 255, 255); MTitle.Font = Enum.Font.GothamBold; MTitle.BackgroundTransparency = 1; MTitle.TextXAlignment = Enum.TextXAlignment.Left
     
     local Close = Instance.new("TextButton", Top); Close.Size = UDim2.new(0, 30, 0, 30); Close.Position = UDim2.new(1, -35, 0.5, -15); Close.Text = "X"; Close.BackgroundColor3 = Color3.fromRGB(200, 0, 0); Close.TextColor3 = Color3.fromRGB(255, 255, 255); Instance.new("UICorner", Close)
-    Close.MouseButton1Click:Connect(function() HUD:Destroy() end)
+    Close.MouseButton1Click:Connect(function() HUD:Destroy(); FOVCircle.Visible = false end)
 
     local Scroll = Instance.new("ScrollingFrame", Main); Scroll.Size = UDim2.new(1, -20, 1, -60); Scroll.Position = UDim2.new(0, 10, 0, 50); Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 0; Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 8)
 
@@ -122,9 +140,9 @@ function LoadV1Menu()
 
     AddSwitch("AIMBOT (M2)", "Aimbot"); AddSwitch("EXIBIR FOV", "ShowFOV"); AddSwitch("ESP DISTANCIA", "ESP"); AddSwitch("VOAR (FLY)", "Fly"); AddSwitch("AUTO ACTION", "AutoAction"); AddSwitch("ANDAR COMENDO", "WalkEating"); AddSwitch("RADAR STAFF", "RadarStaff"); AddSwitch("RADAR USER", "RadarUser")
 
-    UIS.InputBegan:Connect(function(i, g) if i.KeyCode == Enum.KeyCode.F1 then Main.Visible = not Main.Visible end end)
+    UIS.InputBegan:Connect(function(i, g) if i.KeyCode == Enum.KeyCode.F1 and not g then Main.Visible = not Main.Visible end end)
 
-    RS.RenderStepped:Connect(function()
+    _G.TH_Connection = RS.RenderStepped:Connect(function()
         FOVCircle.Visible = Settings.ShowFOV
         FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
         FOVCircle.Radius = Settings.FOVSize
@@ -147,22 +165,26 @@ function LoadV1Menu()
         end
 
         if Settings.Fly then
-            Char.Humanoid:ChangeState(11)
-            local M = Vector3.new(0, 0.05, 0)
+            HRP.Velocity = Vector3.new(0, 1.5, 0) -- Flutuar de leve
+            local M = Vector3.new(0, 0.5, 0)
             if UIS:IsKeyDown(Enum.KeyCode.W) then M = M + Camera.CFrame.LookVector end
             if UIS:IsKeyDown(Enum.KeyCode.S) then M = M - Camera.CFrame.LookVector end
             HRP.Velocity = M * Settings.FlySpeed
         end
 
-        local SData = ""
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= Player and v.Character and v.Character:FindFirstChild("Head") then
-                if v:GetRankInGroup(0) > 10 or v.Name:lower():find("admin") then 
-                    SData = SData .. v.Name .. " [" .. math.floor((HRP.Position - v.Character.Head.Position).Magnitude) .. "m]\n" 
+        if Settings.RadarStaff then
+            local SData = ""
+            for _, v in pairs(game.Players:GetPlayers()) do
+                if v ~= Player and v.Character and v.Character:FindFirstChild("Head") then
+                    if v:GetRankInGroup(0) > 10 or v.Name:lower():find("admin") then 
+                        SData = SData .. v.Name .. " [" .. math.floor((HRP.Position - v.Character.Head.Position).Magnitude) .. "m]\n" 
+                    end
                 end
             end
+            TSF.Text = SData ~= "" and SData or "Limpo."
         end
-        TSF.Text = SData ~= "" and SData or "Limpo."; TUS.Text = Player.Name .. " [VIP]"
+        
+        TUS.Text = Player.Name .. " [VIP]"
         if Settings.AutoAction then local T = Char:FindFirstChildOfClass("Tool"); if T then T:Activate() end end
     end)
 end
