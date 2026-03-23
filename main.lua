@@ -1,6 +1,6 @@
 -- =================================================================
 -- TH MODZ SCRIPT V1 - V110 (ULTIMATE EDITION - FIXED)
--- STATUS: OTIMIZADO | ANTI-LAG | SEM CONGELAMENTO
+-- STATUS: PLAYERGUI FIX | ANTI-LAG | SEM CONGELAMENTO
 -- =================================================================
 
 local Player = game:GetService("Players").LocalPlayer
@@ -9,9 +9,13 @@ local RS = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local TS = game:GetService("TweenService")
 
+-- Pega a PlayerGui para evitar o erro 9289 do CoreGui
+local GetGui = Player:WaitForChild("PlayerGui")
+
 -- Limpeza de Scripts Antigos (Evita acumular e congelar)
 if _G.TH_Connection then _G.TH_Connection:Disconnect() end
-if game.CoreGui:FindFirstChild("TH_V1") then game.CoreGui.TH_V1:Destroy() end
+if GetGui:FindFirstChild("TH_V1") then GetGui.TH_V1:Destroy() end
+if GetGui:FindFirstChild("TH_Login") then GetGui.TH_Login:Destroy() end
 
 local Settings = {
     Aimbot = false, 
@@ -56,9 +60,9 @@ local function CreateESP(Target)
             local Root = Target.Character.HumanoidRootPart
             local Pos, OnScreen = Camera:WorldToViewportPoint(Root.Position)
             if OnScreen then
-                local MyRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-                if MyRoot then
-                    local Dist = math.floor((MyRoot.Position - Root.Position).Magnitude)
+                local MyChar = Player.Character
+                if MyChar and MyChar:FindFirstChild("HumanoidRootPart") then
+                    local Dist = math.floor((MyChar.HumanoidRootPart.Position - Root.Position).Magnitude)
                     Text.Position = Vector2.new(Pos.X, Pos.Y); Text.Text = Target.Name .. " [" .. Dist .. "m]"; Text.Visible = true
                 end
             else Text.Visible = false end
@@ -75,9 +79,9 @@ end
 for _, v in pairs(game.Players:GetPlayers()) do CreateESP(v) end
 game.Players.PlayerAdded:Connect(CreateESP)
 
--- 4. LOGIN (CORRIGIDO PARA NÃO CONGELAR)
+-- 4. LOGIN (CORRIGIDO PARA PLAYERGUI)
 local function CreateLogin()
-    local LoginGui = Instance.new("ScreenGui", game.CoreGui); LoginGui.Name = "TH_Login"; LoginGui.ResetOnSpawn = false
+    local LoginGui = Instance.new("ScreenGui", GetGui); LoginGui.Name = "TH_Login"; LoginGui.ResetOnSpawn = false
     local Main = Instance.new("Frame", LoginGui); Main.Size = UDim2.new(0, 320, 0, 320); Main.Position = UDim2.new(0.5, -160, 0.4, -160)
     Main.BackgroundColor3 = Color3.fromRGB(10, 10, 15); Instance.new("UICorner", Main); Instance.new("UIStroke", Main).Color = Color3.fromRGB(255, 0, 150)
     
@@ -95,16 +99,16 @@ local function CreateLogin()
                 Title.Text = msg
                 local Tw = TS:Create(Fill, TweenInfo.new(0.8), {Size = UDim2.new(i/#Msgs, 0, 1, 0)})
                 Tw:Play(); Tw.Completed:Wait()
-                task.wait(0.2)
+                task.wait(0.1)
             end
             LoginGui:Destroy(); LoadV1Menu()
         end)
     end)
 end
 
--- 5. MENU PRINCIPAL (OTIMIZADO)
+-- 5. MENU PRINCIPAL (PLAYERGUI)
 function LoadV1Menu()
-    local HUD = Instance.new("ScreenGui", game.CoreGui); HUD.Name = "TH_V1"; HUD.ResetOnSpawn = false
+    local HUD = Instance.new("ScreenGui", GetGui); HUD.Name = "TH_V1"; HUD.ResetOnSpawn = false
 
     local function CreateRadar(name, color, pos)
         local R = Instance.new("Frame", HUD); R.Size = UDim2.new(0, 180, 0, 100); R.Position = pos; R.BackgroundColor3 = Color3.fromRGB(12, 12, 15); R.Visible = false; Instance.new("UICorner", R); Instance.new("UIStroke", R).Color = color; Drag(R)
@@ -165,7 +169,7 @@ function LoadV1Menu()
         end
 
         if Settings.Fly then
-            HRP.Velocity = Vector3.new(0, 1.5, 0) -- Flutuar de leve
+            HRP.Velocity = Vector3.new(0, 1.5, 0) 
             local M = Vector3.new(0, 0.5, 0)
             if UIS:IsKeyDown(Enum.KeyCode.W) then M = M + Camera.CFrame.LookVector end
             if UIS:IsKeyDown(Enum.KeyCode.S) then M = M - Camera.CFrame.LookVector end
@@ -175,18 +179,4 @@ function LoadV1Menu()
         if Settings.RadarStaff then
             local SData = ""
             for _, v in pairs(game.Players:GetPlayers()) do
-                if v ~= Player and v.Character and v.Character:FindFirstChild("Head") then
-                    if v:GetRankInGroup(0) > 10 or v.Name:lower():find("admin") then 
-                        SData = SData .. v.Name .. " [" .. math.floor((HRP.Position - v.Character.Head.Position).Magnitude) .. "m]\n" 
-                    end
-                end
-            end
-            TSF.Text = SData ~= "" and SData or "Limpo."
-        end
-        
-        TUS.Text = Player.Name .. " [VIP]"
-        if Settings.AutoAction then local T = Char:FindFirstChildOfClass("Tool"); if T then T:Activate() end end
-    end)
-end
-
-CreateLogin()
+                if v ~= Player and
